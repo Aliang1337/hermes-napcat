@@ -933,3 +933,15 @@ def register(ctx):
             "addressed in the incoming message."
         ),
     )
+
+    # Register ~55 agent tools so the LLM can drive QQ natively:
+    # like / poke / mute / kick / pin / OCR / upload / forward / etc.
+    # Tool registration is best-effort: a failure here must not stop the
+    # platform adapter from loading.
+    try:
+        from .tools import register_all_tools
+
+        count = register_all_tools()
+        logger.info("NapCat: registered %d QQ agent tools", count)
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.warning("NapCat: failed to register agent tools: %s", exc)

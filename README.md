@@ -150,8 +150,142 @@ hermes gateway run
 | 发送图片/语音/视频 | ✅ |
 | 文件上传 | ✅（调用 NapCat 的 `upload_group_file` / `upload_private_file`） |
 | @mention 段识别 | ✅（消息里的 `@QQ号` 会保留以便 LLM 知道被 @ 的是谁） |
+| **60 个 QQ Agent 工具**（v1.1+） | ✅ —— LLM 可直接调用，见下文 |
 | 群成员级白名单 | ❌（当前版本只支持群级白名单，未来可能添加） |
-| 复杂转发消息 | ❌（暂未实现 forward_msg 段） |
+| 复杂转发消息（forward 段构造） | ⚠️（提供 `qq_send_group_forward_msg` 但 node 结构需要 LLM 自构造） |
+
+---
+
+## Agent 工具一览（60 个）
+
+插件启动时会自动注册到 hermes 的 `qq-napcat` toolset，LLM 可在对话里直接调用。
+
+### 查询类（8）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_get_user_info` | 获取用户资料（昵称/年龄/签名/等级） |
+| `qq_get_group_info` | 获取群信息（名称/成员数） |
+| `qq_get_group_member_info` | 获取群成员详细信息 |
+| `qq_get_friend_list` | 列出机器人好友 |
+| `qq_get_group_list` | 列出机器人加入的群 |
+| `qq_get_group_member_list` | 列出群全部成员 |
+| `qq_get_group_honor_info` | 群荣誉（龙王、群聊之火、群聊炽焰…） |
+| `qq_get_group_at_all_remain` | 今天 @全体 还能用几次 |
+
+### 互动类（7）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_like_user` | 给某人点赞（1-10 次） |
+| `qq_poke` | 戳一戳（私聊/群聊） |
+| `qq_recall_message` | 撤回消息 |
+| `qq_set_msg_emoji_like` | 给消息加表情回应 |
+| `qq_ocr_image` | OCR 图片文字识别 |
+| `qq_translate_en2zh` | 英译中 |
+| `qq_mark_msg_as_read` | 标记消息已读 |
+
+### 消息发送类（7）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_send_message` | 主动发消息（文/图/语音/视频；target=`group:xxx` 或 `private:xxx`） |
+| `qq_upload_file` | 上传任意文件 |
+| `qq_forward_message` | 转发某条消息到指定目标 |
+| `qq_send_group_forward_msg` | 发送群合并转发消息 |
+| `qq_send_private_forward_msg` | 发送私聊合并转发消息 |
+| `qq_download_file` | 下载文件到机器人本地 |
+| `qq_get_msg` | 按 message_id 拉取消息详情 |
+
+### 消息历史 / 精华消息（5）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_get_group_msg_history` | 群历史消息 |
+| `qq_get_friend_msg_history` | 私聊历史消息 |
+| `qq_get_essence_msg_list` | 群精华消息列表 |
+| `qq_set_essence_msg` | 设置精华消息 |
+| `qq_delete_essence_msg` | 取消精华消息 |
+
+### 好友管理（2）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_set_friend_remark` | 设置好友备注 |
+| `qq_delete_friend` | 删除好友 |
+
+### 群管理（11）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_mute_group_member` | 禁言（duration 秒；0=解禁） |
+| `qq_kick_group_member` | 踢人 |
+| `qq_set_group_card` | 修改群名片 |
+| `qq_set_group_admin` | 设置/取消管理员 |
+| `qq_set_group_name` | 改群名 |
+| `qq_set_group_whole_ban` | 全员禁言开关 |
+| `qq_set_group_special_title` | 设置专属头衔 |
+| `qq_leave_group` | 退群（owner 可解散） |
+| `qq_set_group_portrait` | 设置群头像 |
+| `qq_set_group_sign` | 群签到 |
+| `qq_set_group_remark` | 设置群备注（仅自己可见） |
+
+### 群公告（3）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_send_group_notice` | 发群公告 |
+| `qq_get_group_notice` | 群公告列表 |
+| `qq_delete_group_notice` | 删群公告 |
+
+### 群文件（4）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_get_group_root_files` | 列群文件根目录 |
+| `qq_get_group_file_url` | 拿群文件下载链接 |
+| `qq_create_group_file_folder` | 新建文件夹 |
+| `qq_delete_group_file` | 删除群文件 |
+
+### 请求处理（2）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_handle_friend_request` | 同意/拒绝加好友请求 |
+| `qq_handle_group_request` | 同意/拒绝入群/邀请请求 |
+
+### NapCat 扩展（11）
+
+| 工具名 | 功能 |
+|--------|------|
+| `qq_get_login_info` | 机器人自身 QQ/昵称 |
+| `qq_get_status` | 运行时状态 |
+| `qq_get_version_info` | NapCat / OneBot 版本 |
+| `qq_can_send_image` | 检测能否发图 |
+| `qq_can_send_record` | 检测能否发语音 |
+| `qq_clean_cache` | 清理 NapCat 媒体缓存 |
+| `qq_get_forward_msg` | 拉取合并转发消息内容 |
+| `qq_get_record` | 转换 NapCat 语音格式 |
+| `qq_get_image` | 解析图片 file_id 到本地路径 |
+| `qq_set_qq_profile` | 修改机器人自身资料 |
+| `qq_get_group_system_msg` | 待处理的群系统消息 |
+
+---
+
+### 工具使用示例
+
+群里直接对机器人说：
+- "**给 @张三 点 10 个赞**" → 调 `qq_like_user`
+- "**戳他一下**" → 调 `qq_poke`
+- "**禁言这个人 10 分钟**" → 调 `qq_mute_group_member`
+- "**把刚才那条精华了**" → 调 `qq_set_essence_msg`
+- "**这张图识别一下**" → 调 `qq_ocr_image`
+- "**翻译一下：Hello world**" → 调 `qq_translate_en2zh`
+- "**今晚 8 点发公告说放假通知**" → 配合 hermes cron + `qq_send_group_notice`
+
+机器人会先决定调哪个工具，传对应参数，调成功后再生成自然语言回复。
+
+---
 
 ---
 

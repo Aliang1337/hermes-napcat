@@ -1,12 +1,15 @@
 name: napcat-platform
 label: QQ (NapCat)
 kind: platform
-version: 1.0.0
+version: 1.1.0
 description: >
   QQ messaging adapter for Hermes Agent based on NapCat's OneBot 11
   reverse WebSocket protocol. Hermes hosts a reverse WS server that
   NapCat connects to for inbound events, and calls NapCat's HTTP API
   for outbound messages.
+  Also registers ~55 QQ control tools so the LLM can natively like,
+  poke, manage groups, pin messages, OCR, upload files, fetch history,
+  react with emoji, etc.
 author: Hermes Community
 requires_env:
   - name: NAPCAT_WS_HOST
