@@ -1,0 +1,52 @@
+name: napcat-platform
+label: QQ (NapCat)
+kind: platform
+version: 1.0.0
+description: >
+  QQ messaging adapter for Hermes Agent based on NapCat's OneBot 11
+  reverse WebSocket protocol. Hermes hosts a reverse WS server that
+  NapCat connects to for inbound events, and calls NapCat's HTTP API
+  for outbound messages.
+author: Hermes Community
+requires_env:
+  - name: NAPCAT_WS_HOST
+    description: "Reverse WebSocket bind host (default: 0.0.0.0)"
+    prompt: "Reverse WS bind host"
+    password: false
+  - name: NAPCAT_WS_PORT
+    description: "Reverse WebSocket bind port (default: 18800)"
+    prompt: "Reverse WS bind port"
+    password: false
+  - name: NAPCAT_HTTP_API
+    description: "NapCat HTTP API base URL (e.g. http://127.0.0.1:3000)"
+    prompt: "NapCat HTTP API URL"
+    password: false
+optional_env:
+  - name: NAPCAT_ACCESS_TOKEN
+    description: "Access token for OneBot 11 API + WS authentication"
+    prompt: "Access token"
+    password: true
+  - name: NAPCAT_SELF_ID
+    description: "Bot QQ number (auto-detected from WS handshake if blank)"
+    prompt: "Bot QQ number"
+    password: false
+  - name: NAPCAT_ALLOWED_USERS
+    description: "Comma-separated QQ numbers allowed to DM the bot"
+    prompt: "Allowed QQ numbers"
+    password: false
+  - name: NAPCAT_ALLOW_ALL_USERS
+    description: "Allow anyone to DM the bot (dev only)"
+    prompt: "Allow all? (true/false)"
+    password: false
+  - name: NAPCAT_GROUP_ALLOWLIST
+    description: "Comma-separated group IDs whose @mentions trigger the bot"
+    prompt: "Allowed group IDs"
+    password: false
+  - name: NAPCAT_REQUIRE_MENTION
+    description: "Require @bot mention to respond in groups (default: true)"
+    prompt: "Require @mention in groups?"
+    password: false
+  - name: NAPCAT_HOME_CHANNEL
+    description: "Home channel for cron delivery (format: 'private:<qq>' or 'group:<id>')"
+    prompt: "Home channel"
+    password: false
