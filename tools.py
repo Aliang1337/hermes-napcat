@@ -674,11 +674,51 @@ def _register_interaction_tools() -> None:
 
 def _register_message_tools() -> None:
     # qq_send_message
+    def _looks_like_url(s: str) -> bool:
+        s = (s or "").strip().lower()
+        return s.startswith(("http://", "https://", "file://", "base64://"))
+
+    def _validate_media(url: str, kind: str) -> Optional[str]:
+        """Return an error string if ``url`` is unusable, else None."""
+        if not url or not url.strip():
+            return None
+        url = url.strip()
+        if _looks_like_url(url):
+            return None  # remote URL — let NapCat fetch it
+        # Treat as local path: it MUST exist where NapCat can read it.
+        import os.path
+        if not os.path.isabs(url):
+            return (
+                f"qq_send_message rejected: {kind} path '{url}' is not absolute. "
+                "Provide a public http(s) URL, or an absolute file path that "
+                "exists on the NapCat host. DO NOT invent placeholder filenames."
+            )
+        if not os.path.exists(url):
+            return (
+                f"qq_send_message rejected: {kind} file '{url}' does not exist "
+                "on the hermes host. If you don't actually have a media file, "
+                "drop the {kind}_url parameter and send only text. NEVER make "
+                "up filenames hoping NapCat will produce a video for you — it "
+                "won't, and the user will see an empty [视频] / [图片] / [语音]."
+            ).format(kind=kind)
+        return None
+
     async def _send_message(a: Dict[str, Any]) -> str:
         try:
             is_group, id_ = _parse_target(a["target"])
             action = "send_group_msg" if is_group else "send_private_msg"
             key = "group_id" if is_group else "user_id"
+
+            # Pre-validate any local file paths so the LLM gets an immediate,
+            # honest failure instead of NapCat half-sending a broken bubble.
+            for kind, url in (
+                ("image", a.get("image_url")),
+                ("voice", a.get("voice_url")),
+                ("video", a.get("video_url")),
+            ):
+                err = _validate_media(url, kind)
+                if err:
+                    return err
 
             sent_parts: List[str] = []
 
