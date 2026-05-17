@@ -202,7 +202,70 @@ def register_all_tools() -> int:
     _register_request_tools()
     _register_misc_tools()
     _register_napcat_extension_tools()
+    _register_hermes_napcat_composite()
     return len(registry.get_tool_names_for_toolset(TOOLSET))
+
+
+def _register_hermes_napcat_composite() -> None:
+    """Expose qq_* tools to hermes via a ``hermes-napcat`` composite toolset.
+
+    Hermes resolves the default toolset for a *plugin* platform as
+    ``hermes-<platform>`` (see ``hermes_cli.tools_config._get_platform_tools``).
+    Without a ``hermes-napcat`` composite, the gateway never asks the registry
+    for our ``qq-napcat`` tools and the LLM stays blind to them.
+
+    We mutate ``toolsets.TOOLSETS`` in-process to add:
+      - ``hermes-napcat``  →  Hermes core tools + every qq_* tool
+      - registers ``hermes-napcat`` as an alias to ``qq-napcat`` in the
+        tool registry, so cron / send_message paths also resolve it
+
+    Failures here are non-fatal (the qq-napcat toolset itself is still
+    registered) — they just mean the user has to enable tools manually.
+    """
+    qq_tool_names = list(registry.get_tool_names_for_toolset(TOOLSET))
+
+    try:
+        import toolsets as _ts_mod
+    except Exception as exc:  # pragma: no cover
+        logger.warning("NapCat: cannot import hermes toolsets module: %s", exc)
+        return
+
+    core_tools: List[str] = []
+    for attr in ("_HERMES_CORE_TOOLS", "HERMES_CORE_TOOLS"):
+        if hasattr(_ts_mod, attr):
+            core_tools = list(getattr(_ts_mod, attr))
+            break
+
+    combined = list(dict.fromkeys(core_tools + qq_tool_names))
+
+    composite = {
+        "description": "NapCat (QQ via OneBot 11) toolset — Hermes core + "
+                       f"{len(qq_tool_names)} QQ control tools",
+        "tools": combined,
+        "includes": [],
+    }
+
+    if hasattr(_ts_mod, "TOOLSETS") and isinstance(_ts_mod.TOOLSETS, dict):
+        _ts_mod.TOOLSETS["hermes-napcat"] = composite
+        # Also pull napcat into the union "hermes-gateway" toolset so users
+        # whose config still points at hermes-gateway pick up qq_* tools.
+        gw = _ts_mod.TOOLSETS.get("hermes-gateway")
+        if isinstance(gw, dict):
+            includes = list(gw.get("includes") or [])
+            if "hermes-napcat" not in includes:
+                includes.append("hermes-napcat")
+                gw["includes"] = includes
+
+    try:
+        registry.register_toolset_alias("hermes-napcat", TOOLSET)
+    except Exception:
+        pass
+
+    logger.info(
+        "NapCat: registered hermes-napcat composite toolset "
+        "(%d core + %d qq tools)",
+        len(core_tools), len(qq_tool_names),
+    )
 
 
 # ---------------------------------------------------------------------------
