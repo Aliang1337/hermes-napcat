@@ -546,8 +546,24 @@ class NapCatAdapter(BasePlatformAdapter):
             user_name=sender_name,
         )
 
+        # Make the sender's QQ visible to the LLM. Without this, the model
+        # has no way to know who "me" is when the user says "give me a like",
+        # and tools like qq_like_user / qq_poke / qq_mute_group_member would
+        # have to be told the QQ number explicitly every time.
+        #
+        # Skip the prefix for slash commands (/new, /reset, /model …) so the
+        # gateway's command dispatcher still recognises them.
+        body = text or ("[image]" if image_urls else "[voice]" if record_url else "")
+        if body and not body.lstrip().startswith("/"):
+            who = (f"{sender_name} (QQ:{sender_id})"
+                   if sender_name and sender_name != f"qq:{sender_id}"
+                   else f"QQ:{sender_id}")
+            prefix = (f"[group:{group_id} from {who}]"
+                      if is_group else f"[from {who}]")
+            body = f"{prefix} {body}".rstrip()
+
         event_obj = MessageEvent(
-            text=text or ("[image]" if image_urls else "[voice]" if record_url else ""),
+            text=body,
             message_type=msg_type,
             source=source,
             raw_message=event,
