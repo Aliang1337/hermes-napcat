@@ -722,13 +722,29 @@ def _register_message_tools() -> None:
         "qq_send_message",
         "Send a message to a specific QQ user or group. Supports text, image, "
         "voice, video. target format: 'group:<group_id>' or 'private:<user_id>'. "
-        "Pass at least one of text / image_url / voice_url / video_url.",
+        "Pass at least one of text / image_url / voice_url / video_url. "
+        "IMPORTANT: media URLs/paths MUST point to a real, reachable resource "
+        "— either a public http(s) URL, or a file path that NapCat's process "
+        "can read on disk. DO NOT invent placeholder paths like "
+        "'/tmp/random_video.mp4' — if you don't actually have a media file, "
+        "leave that parameter empty and send only text. To use a file produced "
+        "by another tool (e.g. download_file), pass the exact path that tool "
+        "returned, not a guess.",
         {
             "target": _str("Target: 'group:<group_id>' or 'private:<user_id>'"),
             "text": _str("Text content (optional)"),
-            "image_url": _str("Image file URL/path (optional)"),
-            "voice_url": _str("Voice file URL/path — sent as QQ voice (optional)"),
-            "video_url": _str("Video file URL/path (optional)"),
+            "image_url": _str(
+                "Public image URL (http/https) or an absolute path NapCat can "
+                "read. Omit unless you have a real resource."
+            ),
+            "voice_url": _str(
+                "Public voice URL (http/https) or absolute path NapCat can "
+                "read — sent as QQ voice message. Omit unless real."
+            ),
+            "video_url": _str(
+                "Public video URL (http/https) or absolute path NapCat can "
+                "read. Omit unless real."
+            ),
         },
         ["target"],
         _send_message,
